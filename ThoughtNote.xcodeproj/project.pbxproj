@@ -1,0 +1,526 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		/* App */
+		A1000001228A0001 /* ThoughtNoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000001228A0000 /* ThoughtNoteApp.swift */; };
+
+		/* Models */
+		A1000002228A0001 /* Thought.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000002228A0000 /* Thought.swift */; };
+		A1000003228A0001 /* TodoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000003228A0000 /* TodoItem.swift */; };
+		A1000004228A0001 /* SummarizerOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000004228A0000 /* SummarizerOutput.swift */; };
+
+		/* Services */
+		A1000005228A0001 /* AudioRecordingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000005228A0000 /* AudioRecordingService.swift */; };
+		A1000006228A0001 /* SpeechTranscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000006228A0000 /* SpeechTranscriptionService.swift */; };
+		A1000007228A0001 /* SummarizerProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000007228A0000 /* SummarizerProtocol.swift */; };
+		A1000008228A0001 /* StubSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000008228A0000 /* StubSummarizer.swift */; };
+		A1000009228A0001 /* RemoteSummarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000009228A0000 /* RemoteSummarizer.swift */; };
+
+		/* Views */
+		A100000A228A0001 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000A228A0000 /* HomeView.swift */; };
+		A100000B228A0001 /* RecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000B228A0000 /* RecordView.swift */; };
+		A100000C228A0001 /* ThoughtDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000C228A0000 /* ThoughtDetailView.swift */; };
+		A100000D228A0001 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000D228A0000 /* SettingsView.swift */; };
+
+		/* Intents */
+		A100000E228A0001 /* ThoughtIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100000E228A0000 /* ThoughtIntents.swift */; };
+
+		/* Resources */
+		A100000F228A0001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A100000F228A0000 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A1000000228A0000 /* ThoughtNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ThoughtNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+
+		/* App */
+		A1000001228A0000 /* ThoughtNoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThoughtNoteApp.swift; sourceTree = "<group>"; };
+
+		/* Models */
+		A1000002228A0000 /* Thought.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Thought.swift; sourceTree = "<group>"; };
+		A1000003228A0000 /* TodoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoItem.swift; sourceTree = "<group>"; };
+		A1000004228A0000 /* SummarizerOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummarizerOutput.swift; sourceTree = "<group>"; };
+
+		/* Services */
+		A1000005228A0000 /* AudioRecordingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecordingService.swift; sourceTree = "<group>"; };
+		A1000006228A0000 /* SpeechTranscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechTranscriptionService.swift; sourceTree = "<group>"; };
+		A1000007228A0000 /* SummarizerProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummarizerProtocol.swift; sourceTree = "<group>"; };
+		A1000008228A0000 /* StubSummarizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubSummarizer.swift; sourceTree = "<group>"; };
+		A1000009228A0000 /* RemoteSummarizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteSummarizer.swift; sourceTree = "<group>"; };
+
+		/* Views */
+		A100000A228A0000 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		A100000B228A0000 /* RecordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordView.swift; sourceTree = "<group>"; };
+		A100000C228A0000 /* ThoughtDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThoughtDetailView.swift; sourceTree = "<group>"; };
+		A100000D228A0000 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+
+		/* Intents */
+		A100000E228A0000 /* ThoughtIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThoughtIntents.swift; sourceTree = "<group>"; };
+
+		/* Resources */
+		A100000F228A0000 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1000010228A0000 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A1000020228A0000 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A1000030228A0000 = {
+			isa = PBXGroup;
+			children = (
+				A1000031228A0000 /* ThoughtNote */,
+				A1000032228A0000 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A1000031228A0000 /* ThoughtNote */ = {
+			isa = PBXGroup;
+			children = (
+				A1000033228A0000 /* App */,
+				A1000034228A0000 /* Models */,
+				A1000035228A0000 /* Services */,
+				A1000036228A0000 /* Views */,
+				A1000037228A0000 /* Intents */,
+				A1000038228A0000 /* Resources */,
+				A1000010228A0000 /* Info.plist */,
+			);
+			path = ThoughtNote;
+			sourceTree = "<group>";
+		};
+		A1000032228A0000 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A1000000228A0000 /* ThoughtNote.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A1000033228A0000 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A1000001228A0000 /* ThoughtNoteApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A1000034228A0000 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A1000002228A0000 /* Thought.swift */,
+				A1000003228A0000 /* TodoItem.swift */,
+				A1000004228A0000 /* SummarizerOutput.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A1000035228A0000 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A1000039228A0000 /* AudioRecording */,
+				A100003A228A0000 /* SpeechTranscription */,
+				A100003B228A0000 /* Summarization */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A1000039228A0000 /* AudioRecording */ = {
+			isa = PBXGroup;
+			children = (
+				A1000005228A0000 /* AudioRecordingService.swift */,
+			);
+			path = AudioRecording;
+			sourceTree = "<group>";
+		};
+		A100003A228A0000 /* SpeechTranscription */ = {
+			isa = PBXGroup;
+			children = (
+				A1000006228A0000 /* SpeechTranscriptionService.swift */,
+			);
+			path = SpeechTranscription;
+			sourceTree = "<group>";
+		};
+		A100003B228A0000 /* Summarization */ = {
+			isa = PBXGroup;
+			children = (
+				A1000007228A0000 /* SummarizerProtocol.swift */,
+				A1000008228A0000 /* StubSummarizer.swift */,
+				A1000009228A0000 /* RemoteSummarizer.swift */,
+			);
+			path = Summarization;
+			sourceTree = "<group>";
+		};
+		A1000036228A0000 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A100003C228A0000 /* Home */,
+				A100003D228A0000 /* Record */,
+				A100003E228A0000 /* ThoughtDetail */,
+				A100003F228A0000 /* Settings */,
+				A1000040228A0000 /* Components */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A100003C228A0000 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				A100000A228A0000 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		A100003D228A0000 /* Record */ = {
+			isa = PBXGroup;
+			children = (
+				A100000B228A0000 /* RecordView.swift */,
+			);
+			path = Record;
+			sourceTree = "<group>";
+		};
+		A100003E228A0000 /* ThoughtDetail */ = {
+			isa = PBXGroup;
+			children = (
+				A100000C228A0000 /* ThoughtDetailView.swift */,
+			);
+			path = ThoughtDetail;
+			sourceTree = "<group>";
+		};
+		A100003F228A0000 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				A100000D228A0000 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		A1000040228A0000 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		A1000037228A0000 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				A100000E228A0000 /* ThoughtIntents.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
+		A1000038228A0000 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A100000F228A0000 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A1000050228A0000 /* ThoughtNote */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1000060228A0000 /* Build configuration list for PBXNativeTarget "ThoughtNote" */;
+			buildPhases = (
+				A1000051228A0000 /* Sources */,
+				A1000020228A0000 /* Frameworks */,
+				A1000052228A0000 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ThoughtNote;
+			productName = ThoughtNote;
+			productReference = A1000000228A0000 /* ThoughtNote.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A1000070228A0000 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					A1000050228A0000 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = A1000071228A0000 /* Build configuration list for PBXProject "ThoughtNote" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A1000030228A0000;
+			productRefGroup = A1000032228A0000 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A1000050228A0000 /* ThoughtNote */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A1000052228A0000 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A100000F228A0001 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A1000051228A0000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000001228A0001 /* ThoughtNoteApp.swift in Sources */,
+				A1000002228A0001 /* Thought.swift in Sources */,
+				A1000003228A0001 /* TodoItem.swift in Sources */,
+				A1000004228A0001 /* SummarizerOutput.swift in Sources */,
+				A1000005228A0001 /* AudioRecordingService.swift in Sources */,
+				A1000006228A0001 /* SpeechTranscriptionService.swift in Sources */,
+				A1000007228A0001 /* SummarizerProtocol.swift in Sources */,
+				A1000008228A0001 /* StubSummarizer.swift in Sources */,
+				A1000009228A0001 /* RemoteSummarizer.swift in Sources */,
+				A100000A228A0001 /* HomeView.swift in Sources */,
+				A100000B228A0001 /* RecordView.swift in Sources */,
+				A100000C228A0001 /* ThoughtDetailView.swift in Sources */,
+				A100000D228A0001 /* SettingsView.swift in Sources */,
+				A100000E228A0001 /* ThoughtIntents.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A1000080228A0000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A1000081228A0000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		A1000082228A0000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ThoughtNote/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ThoughtNote;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.thoughtnote.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A1000083228A0000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ThoughtNote/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ThoughtNote;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.thoughtnote.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A1000060228A0000 /* Build configuration list for PBXNativeTarget "ThoughtNote" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1000082228A0000 /* Debug */,
+				A1000083228A0000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1000071228A0000 /* Build configuration list for PBXProject "ThoughtNote" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1000080228A0000 /* Debug */,
+				A1000081228A0000 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A1000070228A0000 /* Project object */;
+}
