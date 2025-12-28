@@ -6,8 +6,13 @@ enum KeychainHelper {
 
     // MARK: - Keys
 
-    private static let apiKeyAccount = "com.thoughtnote.apikey"
+    private static let summarizerAPIKeyAccount = "com.thoughtnote.apikey"
+    private static let sttAPIKeyAccount = "com.thoughtnote.stt.apikey"
+    private static let geminiAPIKeyAccount = "com.thoughtnote.gemini.apikey"
     private static let service = "com.thoughtnote.app"
+
+    // Legacy alias
+    private static var apiKeyAccount: String { summarizerAPIKeyAccount }
 
     // MARK: - API Key Operations
 
@@ -128,5 +133,59 @@ extension KeychainHelper {
 
         let status = SecItemDelete(query as CFDictionary)
         return status == errSecSuccess || status == errSecItemNotFound
+    }
+}
+
+// MARK: - STT API Key Operations
+
+extension KeychainHelper {
+
+    /// Save the STT API key to Keychain
+    @discardableResult
+    static func saveSTTAPIKey(_ apiKey: String) -> Bool {
+        save(apiKey, forKey: sttAPIKeyAccount)
+    }
+
+    /// Get the STT API key from Keychain
+    static func getSTTAPIKey() -> String? {
+        get(key: sttAPIKeyAccount)
+    }
+
+    /// Delete the STT API key from Keychain
+    @discardableResult
+    static func deleteSTTAPIKey() -> Bool {
+        delete(key: sttAPIKeyAccount)
+    }
+
+    /// Check if STT API key exists in Keychain
+    static var hasSTTAPIKey: Bool {
+        getSTTAPIKey() != nil
+    }
+}
+
+// MARK: - Gemini API Key Operations
+
+extension KeychainHelper {
+
+    /// Save the Gemini API key to Keychain
+    @discardableResult
+    static func saveGeminiAPIKey(_ apiKey: String) -> Bool {
+        save(apiKey, forKey: geminiAPIKeyAccount)
+    }
+
+    /// Get the Gemini API key from Keychain
+    static func getGeminiAPIKey() -> String? {
+        get(key: geminiAPIKeyAccount)
+    }
+
+    /// Delete the Gemini API key from Keychain
+    @discardableResult
+    static func deleteGeminiAPIKey() -> Bool {
+        delete(key: geminiAPIKeyAccount)
+    }
+
+    /// Check if Gemini API key exists in Keychain
+    static var hasGeminiAPIKey: Bool {
+        getGeminiAPIKey() != nil
     }
 }

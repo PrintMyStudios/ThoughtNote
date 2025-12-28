@@ -42,6 +42,7 @@ protocol Summarizer {
 
 enum SummarizerType: String, Codable, CaseIterable, Identifiable {
     case stub = "stub"
+    case gemini = "gemini"
     case remote = "remote"
     case onDevice = "onDevice"
 
@@ -50,7 +51,8 @@ enum SummarizerType: String, Codable, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .stub: return "Mock (Development)"
-        case .remote: return "Remote API"
+        case .gemini: return "Gemini Flash"
+        case .remote: return "OpenAI/Anthropic API"
         case .onDevice: return "On-Device (Local)"
         }
     }
@@ -58,8 +60,16 @@ enum SummarizerType: String, Codable, CaseIterable, Identifiable {
     var description: String {
         switch self {
         case .stub: return "Returns simulated responses for testing"
-        case .remote: return "Uses cloud API for summarization"
+        case .gemini: return "Google Gemini 2.5 Flash-Lite for fast summarization"
+        case .remote: return "Uses OpenAI or Anthropic API"
         case .onDevice: return "Runs locally using llama.cpp"
+        }
+    }
+
+    var requiresAPIKey: Bool {
+        switch self {
+        case .stub, .onDevice: return false
+        case .gemini, .remote: return true
         }
     }
 }
@@ -74,12 +84,47 @@ enum SummarizerFactory {
         switch type {
         case .stub:
             return StubSummarizer()
+        case .gemini:
+            let apiKey = config.apiKey ?? KeychainHelper.getGeminiAPIKey() ?? ""
+            return GeminiSummarizer(apiKey: apiKey, modelName: config.modelName ?? "gemini-2.0-flash-lite")
         case .remote:
             return RemoteSummarizer(config: config)
         case .onDevice:
             // Future: return OnDeviceSummarizer(config: config)
             // For now, fall back to stub
             return StubSummarizer()
+        }
+    }
+
+    /// Create a summarizer from current settings
+    static func fromSettings() -> Summarizer {
+        let typeRaw = UserDefaults.standard.string(forKey: "summarizerType") ?? SummarizerType.stub.rawValue
+        let type = SummarizerType(rawValue: typeRaw) ?? .stub
+
+        switch type {
+        case .stub:
+            return StubSummarizer()
+
+        case .gemini:
+            if let summarizer = GeminiSummarizer.fromSettings() {
+                return summarizer
+            }
+            return StubSummarizer() // Fallback if no API key
+
+        case .remote:
+            let apiKey = KeychainHelper.getAPIKey() ?? ""
+            let endpoint = UserDefaults.standard.string(forKey: "apiEndpoint") ?? ""
+            let config = SummarizerConfig(
+                apiEndpoint: endpoint.isEmpty ? nil : endpoint,
+                apiKey: apiKey.isEmpty ? nil : apiKey,
+                modelName: nil,
+                maxTokens: 2048,
+                temperature: 0.7
+            )
+            return RemoteSummarizer(config: config)
+
+        case .onDevice:
+            return StubSummarizer() // Fallback for now
         }
     }
 }

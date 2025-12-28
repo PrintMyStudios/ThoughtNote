@@ -3,22 +3,106 @@ import SwiftUI
 /// Settings view for configuring app behavior
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("summarizerType") private var summarizerType: SummarizerType = .stub
-    @AppStorage("keepAudioFiles") private var keepAudioFiles = false
+
+    // STT Settings
+    @AppStorage("sttProvider") private var sttProvider: STTProviderType = .appleSpeech
     @AppStorage("transcriptionLocale") private var transcriptionLocale = Locale.current.identifier
-    @AppStorage("apiEndpoint") private var apiEndpoint = ""
     @AppStorage("showLiveTranscript") private var showLiveTranscript = true
 
-    // API key is stored in Keychain, not AppStorage
-    @State private var apiKey = ""
-    @State private var showingAPIKeyAlert = false
+    // Summarizer Settings
+    @AppStorage("summarizerType") private var summarizerType: SummarizerType = .stub
+    @AppStorage("apiEndpoint") private var apiEndpoint = ""
+
+    // Storage Settings
+    @AppStorage("keepAudioFiles") private var keepAudioFiles = false
+
+    // API keys stored in Keychain
+    @State private var sttAPIKey = ""
+    @State private var geminiAPIKey = ""
+    @State private var remoteAPIKey = ""
+
+    // UI State
     @State private var storageUsed: String = "Calculating..."
-    @State private var isTestingConnection = false
-    @State private var connectionTestResult: String?
+    @State private var isTestingSTTConnection = false
+    @State private var sttConnectionResult: String?
+    @State private var isTestingSummarizerConnection = false
+    @State private var summarizerConnectionResult: String?
 
     var body: some View {
         NavigationStack {
             Form {
+                // STT Provider Section
+                Section {
+                    Picker("Provider", selection: $sttProvider) {
+                        ForEach(STTProviderType.allCases) { provider in
+                            VStack(alignment: .leading) {
+                                Text(provider.displayName)
+                                Text(provider.description)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .tag(provider)
+                        }
+                    }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
+
+                    if sttProvider == .assemblyAI {
+                        SecureField("AssemblyAI API Key", text: $sttAPIKey)
+                            .textContentType(.password)
+                            .autocapitalization(.none)
+                            .onChange(of: sttAPIKey) { _, newValue in
+                                if !newValue.isEmpty {
+                                    KeychainHelper.saveSTTAPIKey(newValue)
+                                } else {
+                                    KeychainHelper.deleteSTTAPIKey()
+                                }
+                            }
+
+                        if !sttAPIKey.isEmpty {
+                            Button {
+                                testSTTConnection()
+                            } label: {
+                                if isTestingSTTConnection {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                } else {
+                                    Text("Test Connection")
+                                }
+                            }
+                            .disabled(isTestingSTTConnection)
+                        }
+
+                        if let result = sttConnectionResult {
+                            Text(result)
+                                .font(.caption)
+                                .foregroundStyle(result.contains("Success") ? .green : .red)
+                        }
+                    }
+
+                    Picker("Language", selection: $transcriptionLocale) {
+                        ForEach(SpeechTranscriptionService.supportedLocales, id: \.identifier) { locale in
+                            Text(locale.localizedString(forIdentifier: locale.identifier) ?? locale.identifier)
+                                .tag(locale.identifier)
+                        }
+                    }
+
+                    Toggle("Show Live Transcript", isOn: $showLiveTranscript)
+                } header: {
+                    Text("Speech-to-Text")
+                } footer: {
+                    switch sttProvider {
+                    case .appleSpeech:
+                        if SpeechTranscriptionService(locale: Locale(identifier: transcriptionLocale)).supportsOnDevice {
+                            Text("On-device transcription is available for this language.")
+                        } else {
+                            Text("Transcription may require an internet connection.")
+                        }
+                    case .assemblyAI:
+                        Text("Cloud-based streaming transcription. Requires internet connection.")
+                    }
+                }
+
                 // Summarizer Section
                 Section {
                     Picker("Summarizer", selection: $summarizerType) {
@@ -35,14 +119,48 @@ struct SettingsView: View {
                     .pickerStyle(.inline)
                     .labelsHidden()
 
+                    if summarizerType == .gemini {
+                        SecureField("Gemini API Key", text: $geminiAPIKey)
+                            .textContentType(.password)
+                            .autocapitalization(.none)
+                            .onChange(of: geminiAPIKey) { _, newValue in
+                                if !newValue.isEmpty {
+                                    KeychainHelper.saveGeminiAPIKey(newValue)
+                                } else {
+                                    KeychainHelper.deleteGeminiAPIKey()
+                                }
+                            }
+
+                        if !geminiAPIKey.isEmpty {
+                            Button {
+                                testSummarizerConnection()
+                            } label: {
+                                if isTestingSummarizerConnection {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                } else {
+                                    Text("Test Connection")
+                                }
+                            }
+                            .disabled(isTestingSummarizerConnection)
+                        }
+
+                        if let result = summarizerConnectionResult {
+                            Text(result)
+                                .font(.caption)
+                                .foregroundStyle(result.contains("Success") ? .green : .red)
+                        }
+                    }
+
                     if summarizerType == .remote {
                         TextField("API Endpoint", text: $apiEndpoint)
                             .textContentType(.URL)
                             .autocapitalization(.none)
 
-                        SecureField("API Key", text: $apiKey)
-                            .onChange(of: apiKey) { oldValue, newValue in
-                                // Save to Keychain when changed
+                        SecureField("API Key", text: $remoteAPIKey)
+                            .textContentType(.password)
+                            .autocapitalization(.none)
+                            .onChange(of: remoteAPIKey) { _, newValue in
                                 if !newValue.isEmpty {
                                     KeychainHelper.saveAPIKey(newValue)
                                 } else {
@@ -50,21 +168,21 @@ struct SettingsView: View {
                                 }
                             }
 
-                        if !apiKey.isEmpty {
+                        if !remoteAPIKey.isEmpty {
                             Button {
-                                testAPIConnection()
+                                testSummarizerConnection()
                             } label: {
-                                if isTestingConnection {
+                                if isTestingSummarizerConnection {
                                     ProgressView()
                                         .progressViewStyle(.circular)
                                 } else {
                                     Text("Test Connection")
                                 }
                             }
-                            .disabled(isTestingConnection)
+                            .disabled(isTestingSummarizerConnection)
                         }
 
-                        if let result = connectionTestResult {
+                        if let result = summarizerConnectionResult {
                             Text(result)
                                 .font(.caption)
                                 .foregroundStyle(result.contains("Success") ? .green : .red)
@@ -76,30 +194,12 @@ struct SettingsView: View {
                     switch summarizerType {
                     case .stub:
                         Text("Uses mock responses for testing. Great for development.")
+                    case .gemini:
+                        Text("Uses Google Gemini 2.5 Flash-Lite for fast, cost-effective summarization.")
                     case .remote:
-                        Text("Connects to a cloud API for summarization. Requires API key.")
+                        Text("Connects to OpenAI or Anthropic API for summarization.")
                     case .onDevice:
                         Text("Coming soon: Run summarization locally using llama.cpp.")
-                    }
-                }
-
-                // Transcription Section
-                Section {
-                    Picker("Language", selection: $transcriptionLocale) {
-                        ForEach(SpeechTranscriptionService.supportedLocales, id: \.identifier) { locale in
-                            Text(locale.localizedString(forIdentifier: locale.identifier) ?? locale.identifier)
-                                .tag(locale.identifier)
-                        }
-                    }
-
-                    Toggle("Show Live Transcript", isOn: $showLiveTranscript)
-                } header: {
-                    Text("Transcription")
-                } footer: {
-                    if SpeechTranscriptionService(locale: Locale(identifier: transcriptionLocale)).supportsOnDevice {
-                        Text("On-device transcription is available for this language.")
-                    } else {
-                        Text("Transcription requires an internet connection.")
                     }
                 }
 
@@ -178,40 +278,87 @@ struct SettingsView: View {
             }
             .task {
                 calculateStorageUsage()
-                // Load API key from Keychain
-                apiKey = KeychainHelper.getAPIKey() ?? ""
+                // Load API keys from Keychain
+                sttAPIKey = KeychainHelper.getSTTAPIKey() ?? ""
+                geminiAPIKey = KeychainHelper.getGeminiAPIKey() ?? ""
+                remoteAPIKey = KeychainHelper.getAPIKey() ?? ""
             }
         }
     }
 
     // MARK: - Actions
 
-    private func testAPIConnection() {
-        isTestingConnection = true
-        connectionTestResult = nil
+    private func testSTTConnection() {
+        isTestingSTTConnection = true
+        sttConnectionResult = nil
 
         Task {
             do {
-                let config = SummarizerConfig(
-                    apiEndpoint: apiEndpoint.isEmpty ? nil : apiEndpoint,
-                    apiKey: apiKey.isEmpty ? nil : apiKey,
-                    modelName: nil,
-                    maxTokens: 100,
-                    temperature: 0.7
-                )
-                let summarizer = RemoteSummarizer(config: config)
+                // For AssemblyAI, we can test by checking if the API key is valid
+                // by making a simple API call
+                let url = URL(string: "https://api.assemblyai.com/v2/transcript")!
+                var request = URLRequest(url: url)
+                request.httpMethod = "GET"
+                request.setValue(sttAPIKey, forHTTPHeaderField: "Authorization")
+
+                let (_, response) = try await URLSession.shared.data(for: request)
+                let httpResponse = response as? HTTPURLResponse
+
+                await MainActor.run {
+                    if httpResponse?.statusCode == 401 {
+                        sttConnectionResult = "✗ Failed: Invalid API key"
+                    } else {
+                        sttConnectionResult = "✓ Success! API key is valid."
+                    }
+                    isTestingSTTConnection = false
+                }
+            } catch {
+                await MainActor.run {
+                    sttConnectionResult = "✗ Failed: \(error.localizedDescription)"
+                    isTestingSTTConnection = false
+                }
+            }
+        }
+    }
+
+    private func testSummarizerConnection() {
+        isTestingSummarizerConnection = true
+        summarizerConnectionResult = nil
+
+        Task {
+            do {
+                let summarizer: Summarizer
+                switch summarizerType {
+                case .gemini:
+                    summarizer = GeminiSummarizer(apiKey: geminiAPIKey)
+                case .remote:
+                    let config = SummarizerConfig(
+                        apiEndpoint: apiEndpoint.isEmpty ? nil : apiEndpoint,
+                        apiKey: remoteAPIKey.isEmpty ? nil : remoteAPIKey,
+                        modelName: nil,
+                        maxTokens: 100,
+                        temperature: 0.7
+                    )
+                    summarizer = RemoteSummarizer(config: config)
+                default:
+                    await MainActor.run {
+                        summarizerConnectionResult = "✓ No connection needed for this provider."
+                        isTestingSummarizerConnection = false
+                    }
+                    return
+                }
 
                 // Try a simple summarization
                 _ = try await summarizer.summarize(transcript: "Test connection.", existingSummary: nil)
 
                 await MainActor.run {
-                    connectionTestResult = "✓ Success! Connection working."
-                    isTestingConnection = false
+                    summarizerConnectionResult = "✓ Success! Connection working."
+                    isTestingSummarizerConnection = false
                 }
             } catch {
                 await MainActor.run {
-                    connectionTestResult = "✗ Failed: \(error.localizedDescription)"
-                    isTestingConnection = false
+                    summarizerConnectionResult = "✗ Failed: \(error.localizedDescription)"
+                    isTestingSummarizerConnection = false
                 }
             }
         }
@@ -402,8 +549,19 @@ extension SummarizerType: RawRepresentable {
     public init?(rawValue: String) {
         switch rawValue {
         case "stub": self = .stub
+        case "gemini": self = .gemini
         case "remote": self = .remote
         case "onDevice": self = .onDevice
+        default: return nil
+        }
+    }
+}
+
+extension STTProviderType: RawRepresentable {
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "appleSpeech": self = .appleSpeech
+        case "assemblyAI": self = .assemblyAI
         default: return nil
         }
     }

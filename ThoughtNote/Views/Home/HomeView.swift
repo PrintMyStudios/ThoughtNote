@@ -219,7 +219,7 @@ struct RecordButton: View {
 
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Thought.self, TodoItem.self, configurations: config)
+    let container = try! ModelContainer(for: Thought.self, TodoItem.self, ThoughtEntry.self, configurations: config)
 
     // Add sample data
     let sample = Thought.sample

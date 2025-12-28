@@ -42,7 +42,12 @@ struct ThoughtDetailView: View {
                     questionsSection(questions)
                 }
 
-                // Transcript section
+                // Entries section (if available)
+                if !thought.entries.isEmpty {
+                    entriesSection
+                }
+
+                // Transcript section (fallback for raw transcript)
                 transcriptSection
             }
             .padding()
@@ -248,6 +253,37 @@ struct ThoughtDetailView: View {
         }
     }
 
+    @State private var showingEntries = false
+
+    private var entriesSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                withAnimation {
+                    showingEntries.toggle()
+                }
+            } label: {
+                HStack {
+                    SectionHeader(title: "Entries (\(thought.entries.count))", icon: "list.bullet.rectangle")
+                    Spacer()
+                    Image(systemName: showingEntries ? "chevron.up" : "chevron.down")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+
+            if showingEntries {
+                VStack(spacing: 12) {
+                    ForEach(thought.entries.sorted { $0.createdAt < $1.createdAt }) { entry in
+                        EntryRowView(entry: entry)
+                    }
+                }
+                .padding()
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(8)
+            }
+        }
+    }
+
     private var transcriptSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Button {
@@ -412,6 +448,33 @@ struct WeightedItemRow: View {
     }
 }
 
+struct EntryRowView: View {
+    let entry: ThoughtEntry
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            // Timestamp
+            Text(entry.createdAt, style: .time)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            // Transcript text
+            Text(entry.transcript)
+                .font(.body)
+                .foregroundStyle(.primary)
+
+            // Summary snippet (if available)
+            if let snippet = entry.summarySnippet, !snippet.isEmpty {
+                Text(snippet)
+                    .font(.caption)
+                    .foregroundStyle(.accentColor)
+                    .italic()
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
 // MARK: - Share Sheet
 
 struct ShareSheet: UIViewControllerRepresentable {
@@ -488,12 +551,12 @@ extension Thought {
     NavigationStack {
         ThoughtDetailView(thought: Thought.sample)
     }
-    .modelContainer(for: [Thought.self, TodoItem.self], inMemory: true)
+    .modelContainer(for: [Thought.self, TodoItem.self, ThoughtEntry.self], inMemory: true)
 }
 
 #Preview("Decision") {
     NavigationStack {
         ThoughtDetailView(thought: Thought.decisionSample)
     }
-    .modelContainer(for: [Thought.self, TodoItem.self], inMemory: true)
+    .modelContainer(for: [Thought.self, TodoItem.self, ThoughtEntry.self], inMemory: true)
 }

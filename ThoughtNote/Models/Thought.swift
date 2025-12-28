@@ -57,6 +57,10 @@ final class Thought {
     @Relationship(deleteRule: .cascade, inverse: \TodoItem.thought)
     var todos: [TodoItem]
 
+    /// Transcript entries (segments)
+    @Relationship(deleteRule: .cascade, inverse: \ThoughtEntry.thought)
+    var entries: [ThoughtEntry]
+
     /// Tags stored as JSON string
     var tagsJSON: String
 
@@ -148,6 +152,7 @@ final class Thought {
         summary: String = "",
         bullets: [String] = [],
         todos: [TodoItem] = [],
+        entries: [ThoughtEntry] = [],
         tags: [String] = [],
         source: ThoughtSource = .manual,
         mode: ThoughtMode = .ramble,
@@ -162,6 +167,7 @@ final class Thought {
         self.summary = summary
         self.bulletsJSON = "[]"
         self.todos = todos
+        self.entries = entries
         self.tagsJSON = "[]"
         self.source = source
         self.mode = mode
@@ -183,6 +189,30 @@ final class Thought {
             rawTranscript += "\n\n---\n\n" + newTranscript
         }
         updatedAt = Date()
+    }
+
+    /// Add a new entry (segment) to this thought
+    func addEntry(_ entry: ThoughtEntry) {
+        entries.append(entry)
+        // Rebuild rawTranscript from entries
+        rebuildTranscript()
+        updatedAt = Date()
+    }
+
+    /// Rebuild the raw transcript from all entries
+    func rebuildTranscript() {
+        rawTranscript = entries
+            .sorted { $0.createdAt < $1.createdAt }
+            .map { $0.transcript }
+            .joined(separator: " ")
+    }
+
+    /// Get the full transcript from entries (for display)
+    var fullTranscriptFromEntries: String {
+        entries
+            .sorted { $0.createdAt < $1.createdAt }
+            .map { $0.transcript }
+            .joined(separator: " ")
     }
 
     /// Update from summarizer output

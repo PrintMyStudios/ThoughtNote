@@ -11,7 +11,8 @@ struct ThoughtNoteApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Thought.self,
-            TodoItem.self
+            TodoItem.self,
+            ThoughtEntry.self
         ])
         let modelConfiguration = ModelConfiguration(
             schema: schema,
@@ -127,7 +128,7 @@ extension ModelContainer: @unchecked Sendable {}
 
 struct ModelContainerKey: DependencyKey {
     static var defaultValue: ModelContainer {
-        let schema = Schema([Thought.self, TodoItem.self])
+        let schema = Schema([Thought.self, TodoItem.self, ThoughtEntry.self])
         let config = ModelConfiguration(isStoredInMemoryOnly: false)
         return try! ModelContainer(for: schema, configurations: [config])
     }

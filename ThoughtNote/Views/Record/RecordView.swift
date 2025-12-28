@@ -7,7 +7,7 @@ struct RecordView: View {
     @Environment(\.dismiss) private var dismiss
 
     @StateObject private var audioService = AudioRecordingService()
-    @StateObject private var transcriptionService = SpeechTranscriptionService()
+    @StateObject private var transcriptManager = StreamingTranscriptManager.fromSettings()
 
     // Parameters passed from parent (for Siri intents)
     private let initialMode: ThoughtMode
@@ -21,9 +21,12 @@ struct RecordView: View {
     @State private var showingError = false
     @State private var appendToThought: Thought?
 
+    // Collected entries during recording
+    @State private var collectedEntries: [ThoughtEntry] = []
+
     // Settings from AppStorage
+    @AppStorage("sttProvider") private var sttProvider: STTProviderType = .appleSpeech
     @AppStorage("summarizerType") private var summarizerType: SummarizerType = .stub
-    @AppStorage("apiEndpoint") private var apiEndpoint = ""
     @AppStorage("keepAudioFiles") private var keepAudioFiles = false
     @AppStorage("showLiveTranscript") private var showLiveTranscriptSetting = true
 
@@ -196,13 +199,32 @@ struct RecordView: View {
             Toggle("Show Live Transcript", isOn: $showingTranscript)
                 .toggleStyle(.button)
 
-            if showingTranscript && !transcriptionService.transcript.isEmpty {
-                ScrollView {
-                    Text(transcriptionService.transcript)
-                        .font(.body)
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
+            if showingTranscript {
+                VStack(alignment: .leading, spacing: 4) {
+                    // Final transcript
+                    if !transcriptManager.finalTranscript.isEmpty {
+                        Text(transcriptManager.finalTranscript)
+                            .font(.body)
+                            .foregroundStyle(.primary)
+                    }
+
+                    // Partial transcript (current utterance being transcribed)
+                    if !transcriptManager.partialTranscript.isEmpty {
+                        Text(transcriptManager.partialTranscript)
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                            .italic()
+                    }
+
+                    if transcriptManager.fullTranscript.isEmpty {
+                        Text("Listening...")
+                            .font(.body)
+                            .foregroundStyle(.tertiary)
+                            .italic()
+                    }
                 }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(maxHeight: 150)
                 .background(Color(.secondarySystemBackground))
                 .cornerRadius(12)
@@ -288,25 +310,39 @@ struct RecordView: View {
             }
         }
 
-        // Check speech recognition permission
-        if !SpeechTranscriptionService.hasSpeechPermission {
-            let granted = await SpeechTranscriptionService.requestSpeechPermission()
-            if !granted {
-                error = SpeechTranscriptionError.permissionDenied
-                showingError = true
+        // Only check speech permission if using Apple Speech
+        if sttProvider == .appleSpeech {
+            if !SpeechTranscriptionService.hasSpeechPermission {
+                let granted = await SpeechTranscriptionService.requestSpeechPermission()
+                if !granted {
+                    error = SpeechTranscriptionError.permissionDenied
+                    showingError = true
+                }
             }
         }
     }
 
     private func startRecording() async {
         do {
-            // Connect audio buffer to transcription
-            audioService.onAudioBuffer = { [weak transcriptionService] buffer, time in
-                transcriptionService?.processAudioBuffer(buffer, time: time)
+            // Clear any previous entries
+            collectedEntries = []
+
+            // Connect audio buffer to transcription manager
+            audioService.onAudioBuffer = { [weak transcriptManager] buffer, time in
+                transcriptManager?.processAudioBuffer(buffer, time: time)
             }
 
-            // Start transcription first
-            try transcriptionService.startTranscription()
+            // Set up callback for final segments to create entries
+            transcriptManager.onFinalSegment = { [weak self] text in
+                guard let self = self, !text.isEmpty else { return }
+                let entry = ThoughtEntry(transcript: text)
+                DispatchQueue.main.async {
+                    self.collectedEntries.append(entry)
+                }
+            }
+
+            // Start streaming transcription first
+            try await transcriptManager.startStreaming()
 
             // Start audio recording (use settings for keepAudioFiles)
             try await audioService.startRecording(saveToFile: keepAudioFiles)
@@ -324,10 +360,14 @@ struct RecordView: View {
         let audioPath = await audioService.stopRecording()
 
         // Stop transcription and get final text
-        let transcript = await transcriptionService.stopTranscription()
+        let transcript = await transcriptManager.stopStreaming()
+
+        // Create final entry from any remaining transcript not yet captured
+        // (in case there's partial that became final)
+        let entriesForSave = collectedEntries
 
         // Process and save
-        await processAndSave(transcript: transcript, audioPath: audioPath)
+        await processAndSave(transcript: transcript, audioPath: audioPath, entries: entriesForSave)
 
         isProcessing = false
         dismiss()
@@ -336,12 +376,12 @@ struct RecordView: View {
     private func cancelRecording() async {
         if audioService.isRecording {
             _ = await audioService.stopRecording()
-            _ = await transcriptionService.stopTranscription()
+            _ = await transcriptManager.stopStreaming()
         }
         dismiss()
     }
 
-    private func processAndSave(transcript: String, audioPath: URL?) async {
+    private func processAndSave(transcript: String, audioPath: URL?, entries: [ThoughtEntry] = []) async {
         guard !transcript.isEmpty else { return }
 
         // Get summarizer from settings
@@ -376,7 +416,10 @@ struct RecordView: View {
 
             // Update or create thought
             if let thought = appendToThought {
-                thought.appendTranscript(transcript)
+                // Add new entries to existing thought
+                for entry in entries {
+                    thought.addEntry(entry)
+                }
                 thought.updateFromSummary(output)
                 thought.audioFilePath = audioPath?.path
                 // Update source if this append was from Siri
@@ -386,6 +429,7 @@ struct RecordView: View {
             } else {
                 let thought = Thought(
                     rawTranscript: transcript,
+                    entries: entries,
                     source: source,  // Use the actual source from intent
                     mode: selectedMode,
                     audioFilePath: audioPath?.path
@@ -404,24 +448,7 @@ struct RecordView: View {
 
     /// Create summarizer based on settings
     private func createSummarizer() -> Summarizer {
-        switch summarizerType {
-        case .stub:
-            return SummarizerFactory.create(type: .stub)
-        case .remote:
-            // Get API key from Keychain
-            let apiKey = KeychainHelper.getAPIKey() ?? ""
-            let config = SummarizerConfig(
-                apiEndpoint: apiEndpoint.isEmpty ? nil : apiEndpoint,
-                apiKey: apiKey.isEmpty ? nil : apiKey,
-                modelName: nil,
-                maxTokens: 2048,
-                temperature: 0.7
-            )
-            return RemoteSummarizer(config: config)
-        case .onDevice:
-            // Fall back to stub for now
-            return SummarizerFactory.create(type: .stub)
-        }
+        return SummarizerFactory.fromSettings()
     }
 }
 
@@ -465,10 +492,10 @@ struct WaveformBar: View {
 
 #Preview {
     RecordView()
-        .modelContainer(for: [Thought.self, TodoItem.self], inMemory: true)
+        .modelContainer(for: [Thought.self, TodoItem.self, ThoughtEntry.self], inMemory: true)
 }
 
 #Preview("From Siri") {
     RecordView(initialMode: .decision, source: .siri, appendTo: nil)
-        .modelContainer(for: [Thought.self, TodoItem.self], inMemory: true)
+        .modelContainer(for: [Thought.self, TodoItem.self, ThoughtEntry.self], inMemory: true)
 }
