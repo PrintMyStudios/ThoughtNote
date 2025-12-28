@@ -26,8 +26,12 @@ struct SummarizerOutput: Codable, Equatable {
 
 extension SummarizerOutput {
     /// Parse from JSON string with error handling
+    /// Tolerant of markdown code fences and leading/trailing text
     static func parse(from jsonString: String) throws -> SummarizerOutput {
-        guard let data = jsonString.data(using: .utf8) else {
+        // Clean the JSON string - remove markdown fences and extract JSON
+        let cleanedJSON = extractJSON(from: jsonString)
+
+        guard let data = cleanedJSON.data(using: .utf8) else {
             throw SummarizerError.invalidJSON("Could not convert string to data")
         }
 
@@ -39,6 +43,34 @@ extension SummarizerOutput {
         } catch {
             throw SummarizerError.parsingFailed(error.localizedDescription)
         }
+    }
+
+    /// Extract JSON from a string that may contain markdown fences or surrounding text
+    private static func extractJSON(from string: String) -> String {
+        var cleaned = string.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Remove markdown code fences (```json ... ``` or ``` ... ```)
+        if cleaned.hasPrefix("```json") {
+            cleaned = String(cleaned.dropFirst(7))
+        } else if cleaned.hasPrefix("```") {
+            cleaned = String(cleaned.dropFirst(3))
+        }
+
+        if cleaned.hasSuffix("```") {
+            cleaned = String(cleaned.dropLast(3))
+        }
+
+        cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // If it still doesn't start with {, try to find the first { and last }
+        if !cleaned.hasPrefix("{") {
+            if let startIndex = cleaned.firstIndex(of: "{"),
+               let endIndex = cleaned.lastIndex(of: "}") {
+                cleaned = String(cleaned[startIndex...endIndex])
+            }
+        }
+
+        return cleaned
     }
 
     /// Convert to JSON string

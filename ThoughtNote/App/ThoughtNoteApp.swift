@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import AppIntents
 
 /// Main entry point for ThoughtNote app
 @main
@@ -36,7 +37,18 @@ struct ThoughtNoteApp: App {
         WindowGroup {
             HomeView()
                 .sheet(isPresented: $showingRecordSheet) {
-                    RecordView()
+                    // Pass the intent parameters to RecordView
+                    RecordView(
+                        initialMode: recordingMode,
+                        source: recordingSource,
+                        appendTo: appendToThought
+                    )
+                    .onDisappear {
+                        // Reset state after sheet closes
+                        recordingMode = .ramble
+                        recordingSource = .manual
+                        appendToThought = nil
+                    }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .startNewThought)) { notification in
                     handleStartNewThought(notification)

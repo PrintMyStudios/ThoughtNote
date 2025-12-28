@@ -7,11 +7,14 @@ struct SettingsView: View {
     @AppStorage("keepAudioFiles") private var keepAudioFiles = false
     @AppStorage("transcriptionLocale") private var transcriptionLocale = Locale.current.identifier
     @AppStorage("apiEndpoint") private var apiEndpoint = ""
-    @AppStorage("apiKey") private var apiKey = ""
     @AppStorage("showLiveTranscript") private var showLiveTranscript = true
 
+    // API key is stored in Keychain, not AppStorage
+    @State private var apiKey = ""
     @State private var showingAPIKeyAlert = false
     @State private var storageUsed: String = "Calculating..."
+    @State private var isTestingConnection = false
+    @State private var connectionTestResult: String?
 
     var body: some View {
         NavigationStack {
@@ -38,11 +41,33 @@ struct SettingsView: View {
                             .autocapitalization(.none)
 
                         SecureField("API Key", text: $apiKey)
+                            .onChange(of: apiKey) { oldValue, newValue in
+                                // Save to Keychain when changed
+                                if !newValue.isEmpty {
+                                    KeychainHelper.saveAPIKey(newValue)
+                                } else {
+                                    KeychainHelper.deleteAPIKey()
+                                }
+                            }
 
                         if !apiKey.isEmpty {
-                            Button("Test Connection") {
+                            Button {
                                 testAPIConnection()
+                            } label: {
+                                if isTestingConnection {
+                                    ProgressView()
+                                        .progressViewStyle(.circular)
+                                } else {
+                                    Text("Test Connection")
+                                }
                             }
+                            .disabled(isTestingConnection)
+                        }
+
+                        if let result = connectionTestResult {
+                            Text(result)
+                                .font(.caption)
+                                .foregroundStyle(result.contains("Success") ? .green : .red)
                         }
                     }
                 } header: {
@@ -153,6 +178,8 @@ struct SettingsView: View {
             }
             .task {
                 calculateStorageUsage()
+                // Load API key from Keychain
+                apiKey = KeychainHelper.getAPIKey() ?? ""
             }
         }
     }
@@ -160,7 +187,34 @@ struct SettingsView: View {
     // MARK: - Actions
 
     private func testAPIConnection() {
-        // TODO: Implement API connection test
+        isTestingConnection = true
+        connectionTestResult = nil
+
+        Task {
+            do {
+                let config = SummarizerConfig(
+                    apiEndpoint: apiEndpoint.isEmpty ? nil : apiEndpoint,
+                    apiKey: apiKey.isEmpty ? nil : apiKey,
+                    modelName: nil,
+                    maxTokens: 100,
+                    temperature: 0.7
+                )
+                let summarizer = RemoteSummarizer(config: config)
+
+                // Try a simple summarization
+                _ = try await summarizer.summarize(transcript: "Test connection.", existingSummary: nil)
+
+                await MainActor.run {
+                    connectionTestResult = "✓ Success! Connection working."
+                    isTestingConnection = false
+                }
+            } catch {
+                await MainActor.run {
+                    connectionTestResult = "✗ Failed: \(error.localizedDescription)"
+                    isTestingConnection = false
+                }
+            }
+        }
     }
 
     private func calculateStorageUsage() {

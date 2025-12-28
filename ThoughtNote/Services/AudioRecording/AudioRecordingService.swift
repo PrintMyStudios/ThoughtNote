@@ -4,10 +4,11 @@ import Combine
 
 /// Audio recording service that handles capture, metering, and file management
 /// Configured to work alongside other audio (navigation, music) without interruption
-@MainActor
+/// Note: This class is not @MainActor because audio taps run on the audio render thread.
+/// Published properties are updated on the main thread via DispatchQueue.main.
 final class AudioRecordingService: NSObject, ObservableObject {
 
-    // MARK: - Published State
+    // MARK: - Published State (updated on main thread)
 
     @Published private(set) var isRecording = false
     @Published private(set) var isPaused = false
@@ -21,6 +22,10 @@ final class AudioRecordingService: NSObject, ObservableObject {
     private var inputNode: AVAudioInputNode?
     private var audioFile: AVAudioFile?
     private var audioFilePath: URL?
+
+    // MARK: - Thread-safe state
+    private let audioFileQueue = DispatchQueue(label: "com.thoughtnote.audiofile")
+    private var _audioFileRef: AVAudioFile?
 
     // MARK: - Timer
 
@@ -84,10 +89,12 @@ final class AudioRecordingService: NSObject, ObservableObject {
         // Set up audio file if saving
         if saveToFile {
             audioFilePath = try createAudioFilePath()
-            audioFile = try AVAudioFile(
+            let file = try AVAudioFile(
                 forWriting: audioFilePath!,
                 settings: recordingFormat.settings
             )
+            audioFileQueue.sync { _audioFileRef = file }
+            audioFile = file
         }
 
         // Install tap on input node
@@ -113,19 +120,21 @@ final class AudioRecordingService: NSObject, ObservableObject {
         engine.prepare()
         try engine.start()
 
-        // Start timer
-        startTime = Date()
-        accumulatedTime = 0
-        startTimer()
-
-        isRecording = true
-        isPaused = false
-        error = nil
+        // Start timer and update state on main thread
+        DispatchQueue.main.async {
+            self.startTime = Date()
+            self.accumulatedTime = 0
+            self.startTimer()
+            self.isRecording = true
+            self.isPaused = false
+            self.error = nil
+        }
 
         return audioFilePath
     }
 
     /// Stop recording
+    @MainActor
     func stopRecording() async -> URL? {
         guard isRecording else { return nil }
 
@@ -140,7 +149,8 @@ final class AudioRecordingService: NSObject, ObservableObject {
         audioEngine = nil
         inputNode = nil
 
-        // Close audio file
+        // Close audio file thread-safely
+        audioFileQueue.sync { _audioFileRef = nil }
         audioFile = nil
 
         // Deactivate audio session
@@ -216,7 +226,8 @@ final class AudioRecordingService: NSObject, ObservableObject {
             try FileManager.default.createDirectory(at: audioDirectory, withIntermediateDirectories: true)
         }
 
-        let fileName = "thought_\(Date().timeIntervalSince1970).m4a"
+        // Use .caf extension for PCM format (Core Audio Format)
+        let fileName = "thought_\(Date().timeIntervalSince1970).caf"
         return audioDirectory.appendingPathComponent(fileName)
     }
 
@@ -248,12 +259,14 @@ final class AudioRecordingService: NSObject, ObservableObject {
             outputBuffer = buffer
         }
 
-        // Calculate audio level
+        // Calculate audio level (updates UI on main thread)
         calculateAudioLevel(from: outputBuffer)
 
-        // Write to file if available
-        if let audioFile = audioFile {
-            try? audioFile.write(from: outputBuffer)
+        // Write to file if available (thread-safe access)
+        audioFileQueue.async { [weak self] in
+            if let file = self?._audioFileRef {
+                try? file.write(from: outputBuffer)
+            }
         }
 
         // Send to transcription callback
@@ -278,7 +291,9 @@ final class AudioRecordingService: NSObject, ObservableObject {
         // Convert to 0-1 range with some smoothing
         let level = min(1.0, rms * 5) // Amplify for visibility
 
-        Task { @MainActor in
+        // Update UI on main thread
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
             // Smooth the level changes
             self.audioLevel = self.audioLevel * 0.7 + level * 0.3
         }

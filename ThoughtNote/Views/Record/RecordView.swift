@@ -9,17 +9,42 @@ struct RecordView: View {
     @StateObject private var audioService = AudioRecordingService()
     @StateObject private var transcriptionService = SpeechTranscriptionService()
 
-    @State private var selectedMode: ThoughtMode = .ramble
+    // Parameters passed from parent (for Siri intents)
+    private let initialMode: ThoughtMode
+    private let source: ThoughtSource
+    private let initialAppendTo: Thought?
+
+    @State private var selectedMode: ThoughtMode
     @State private var showingTranscript = false
     @State private var isProcessing = false
     @State private var error: Error?
     @State private var showingError = false
     @State private var appendToThought: Thought?
-    @State private var keepAudioFile = false
+
+    // Settings from AppStorage
+    @AppStorage("summarizerType") private var summarizerType: SummarizerType = .stub
+    @AppStorage("apiEndpoint") private var apiEndpoint = ""
+    @AppStorage("keepAudioFiles") private var keepAudioFiles = false
+    @AppStorage("showLiveTranscript") private var showLiveTranscriptSetting = true
 
     // Existing thoughts for "add to" functionality
     @Query(sort: \Thought.updatedAt, order: .reverse, animation: .default)
     private var recentThoughts: [Thought]
+
+    // MARK: - Initialization
+
+    init(
+        initialMode: ThoughtMode = .ramble,
+        source: ThoughtSource = .manual,
+        appendTo: Thought? = nil
+    ) {
+        self.initialMode = initialMode
+        self.source = source
+        self.initialAppendTo = appendTo
+        // Initialize @State with the passed values
+        _selectedMode = State(initialValue: initialMode)
+        _appendToThought = State(initialValue: appendTo)
+    }
 
     var body: some View {
         NavigationStack {
@@ -56,7 +81,7 @@ struct RecordView: View {
                 }
             }
             .padding()
-            .navigationTitle("New Thought")
+            .navigationTitle(appendToThought != nil ? "Add to Thought" : "New Thought")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -75,6 +100,10 @@ struct RecordView: View {
             }
             .task {
                 await checkPermissions()
+            }
+            .onAppear {
+                // Respect the live transcript setting
+                showingTranscript = showLiveTranscriptSetting
             }
         }
     }
@@ -112,6 +141,13 @@ struct RecordView: View {
             Label(selectedMode.displayName, systemImage: selectedMode.iconName)
                 .font(.headline)
                 .foregroundStyle(.secondary)
+
+            // Source indicator (if from Siri)
+            if source == .siri {
+                Label("Started via Siri", systemImage: "waveform.circle")
+                    .font(.caption)
+                    .foregroundStyle(.blue)
+            }
         }
     }
 
@@ -137,6 +173,12 @@ struct RecordView: View {
             Image(systemName: "mic.fill")
                 .font(.system(size: 64))
                 .foregroundStyle(.secondary)
+
+            if let thought = appendToThought {
+                Text("Adding to: \(thought.title.isEmpty ? "Untitled" : thought.title)")
+                    .font(.headline)
+                    .foregroundStyle(.accentColor)
+            }
 
             Text("Tap to start recording")
                 .font(.title2)
@@ -215,6 +257,7 @@ struct RecordView: View {
                 ForEach(recentThoughts.prefix(5)) { thought in
                     Button(thought.title.isEmpty ? "Untitled" : thought.title) {
                         appendToThought = thought
+                        selectedMode = thought.mode
                     }
                 }
             } label: {
@@ -265,8 +308,8 @@ struct RecordView: View {
             // Start transcription first
             try transcriptionService.startTranscription()
 
-            // Start audio recording
-            try await audioService.startRecording(saveToFile: keepAudioFile)
+            // Start audio recording (use settings for keepAudioFiles)
+            try await audioService.startRecording(saveToFile: keepAudioFiles)
 
         } catch {
             self.error = error
@@ -301,8 +344,8 @@ struct RecordView: View {
     private func processAndSave(transcript: String, audioPath: URL?) async {
         guard !transcript.isEmpty else { return }
 
-        // Get summarizer
-        let summarizer = SummarizerFactory.create(type: .stub) // TODO: Use settings
+        // Get summarizer from settings
+        let summarizer = createSummarizer()
 
         do {
             let existingSummary = appendToThought.map { thought -> SummarizerOutput in
@@ -336,10 +379,14 @@ struct RecordView: View {
                 thought.appendTranscript(transcript)
                 thought.updateFromSummary(output)
                 thought.audioFilePath = audioPath?.path
+                // Update source if this append was from Siri
+                if source == .siri {
+                    thought.source = .siri
+                }
             } else {
                 let thought = Thought(
                     rawTranscript: transcript,
-                    source: .manual,
+                    source: source,  // Use the actual source from intent
                     mode: selectedMode,
                     audioFilePath: audioPath?.path
                 )
@@ -352,6 +399,28 @@ struct RecordView: View {
         } catch {
             self.error = error
             showingError = true
+        }
+    }
+
+    /// Create summarizer based on settings
+    private func createSummarizer() -> Summarizer {
+        switch summarizerType {
+        case .stub:
+            return SummarizerFactory.create(type: .stub)
+        case .remote:
+            // Get API key from Keychain
+            let apiKey = KeychainHelper.getAPIKey() ?? ""
+            let config = SummarizerConfig(
+                apiEndpoint: apiEndpoint.isEmpty ? nil : apiEndpoint,
+                apiKey: apiKey.isEmpty ? nil : apiKey,
+                modelName: nil,
+                maxTokens: 2048,
+                temperature: 0.7
+            )
+            return RemoteSummarizer(config: config)
+        case .onDevice:
+            // Fall back to stub for now
+            return SummarizerFactory.create(type: .stub)
         }
     }
 }
@@ -396,5 +465,10 @@ struct WaveformBar: View {
 
 #Preview {
     RecordView()
+        .modelContainer(for: [Thought.self, TodoItem.self], inMemory: true)
+}
+
+#Preview("From Siri") {
+    RecordView(initialMode: .decision, source: .siri, appendTo: nil)
         .modelContainer(for: [Thought.self, TodoItem.self], inMemory: true)
 }

@@ -4,10 +4,11 @@ import AVFoundation
 import Combine
 
 /// Service for real-time and batch speech-to-text transcription
-@MainActor
+/// Note: This class is not @MainActor because processAudioBuffer is called from audio thread.
+/// Published properties are updated on the main thread.
 final class SpeechTranscriptionService: NSObject, ObservableObject {
 
-    // MARK: - Published State
+    // MARK: - Published State (updated on main thread)
 
     @Published private(set) var transcript: String = ""
     @Published private(set) var isTranscribing = false
@@ -22,6 +23,10 @@ final class SpeechTranscriptionService: NSObject, ObservableObject {
     private var speechRecognizer: SFSpeechRecognizer?
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
+
+    // Thread-safe flag for transcription state
+    private let stateQueue = DispatchQueue(label: "com.thoughtnote.transcription.state")
+    private var _isTranscribingInternal = false
 
     // MARK: - Settings
 
@@ -50,6 +55,7 @@ final class SpeechTranscriptionService: NSObject, ObservableObject {
     // MARK: - Public Methods
 
     /// Start streaming transcription
+    @MainActor
     func startTranscription() throws {
         guard !isTranscribing else {
             throw SpeechTranscriptionError.alreadyTranscribing
@@ -76,7 +82,7 @@ final class SpeechTranscriptionService: NSObject, ObservableObject {
 
         // Start recognition task
         recognitionTask = recognizer.recognitionTask(with: request) { [weak self] result, error in
-            Task { @MainActor in
+            DispatchQueue.main.async {
                 self?.handleRecognitionResult(result: result, error: error)
             }
         }
@@ -88,13 +94,18 @@ final class SpeechTranscriptionService: NSObject, ObservableObject {
 
         transcript = ""
         segments = []
+        stateQueue.sync { _isTranscribingInternal = true }
         isTranscribing = true
         self.error = nil
     }
 
     /// Stop transcription
+    @MainActor
     func stopTranscription() async -> String {
         guard isTranscribing else { return transcript }
+
+        // Update thread-safe flag first
+        stateQueue.sync { _isTranscribingInternal = false }
 
         // Finalize current segment
         finalizeCurrentSegment()
@@ -114,8 +125,12 @@ final class SpeechTranscriptionService: NSObject, ObservableObject {
     }
 
     /// Process audio buffer from recording service
+    /// Note: This is called from the audio render thread, so we use thread-safe state check
     func processAudioBuffer(_ buffer: AVAudioPCMBuffer, time: AVAudioTime) {
-        guard isTranscribing else { return }
+        // Use thread-safe flag check
+        var shouldProcess = false
+        stateQueue.sync { shouldProcess = _isTranscribingInternal }
+        guard shouldProcess else { return }
         recognitionRequest?.append(buffer)
     }
 
