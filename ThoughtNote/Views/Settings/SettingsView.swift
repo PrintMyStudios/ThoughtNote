@@ -195,7 +195,7 @@ struct SettingsView: View {
                     case .stub:
                         Text("Uses mock responses for testing. Great for development.")
                     case .gemini:
-                        Text("Uses Google Gemini 2.5 Flash-Lite for fast, cost-effective summarization.")
+                        Text("Uses Google Gemini 3.0 Flash-Lite for fast, cost-effective summarization.")
                     case .remote:
                         Text("Connects to OpenAI or Anthropic API for summarization.")
                     case .onDevice:
