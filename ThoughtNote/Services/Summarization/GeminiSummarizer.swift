@@ -18,7 +18,7 @@ final class GeminiSummarizer: Summarizer {
     // MARK: - Constants
 
     private static let baseURL = "https://generativelanguage.googleapis.com/v1beta/models"
-    private static let defaultModel = "gemini-3.0-flash-lite"
+    private static let defaultModel = "gemini-3.0-flash"
 
     // MARK: - Initialization
 

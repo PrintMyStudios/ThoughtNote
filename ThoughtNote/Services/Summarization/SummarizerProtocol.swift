@@ -60,7 +60,7 @@ enum SummarizerType: String, Codable, CaseIterable, Identifiable {
     var description: String {
         switch self {
         case .stub: return "Returns simulated responses for testing"
-        case .gemini: return "Google Gemini 3.0 Flash-Lite for fast summarization"
+        case .gemini: return "Google Gemini 3.0 Flash for fast summarization"
         case .remote: return "Uses OpenAI or Anthropic API"
         case .onDevice: return "Runs locally using llama.cpp"
         }
@@ -86,7 +86,7 @@ enum SummarizerFactory {
             return StubSummarizer()
         case .gemini:
             let apiKey = config.apiKey ?? KeychainHelper.getGeminiAPIKey() ?? ""
-            return GeminiSummarizer(apiKey: apiKey, modelName: config.modelName ?? "gemini-3.0-flash-lite")
+            return GeminiSummarizer(apiKey: apiKey, modelName: config.modelName ?? "gemini-3.0-flash")
         case .remote:
             return RemoteSummarizer(config: config)
         case .onDevice:
